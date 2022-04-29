@@ -6,6 +6,10 @@
   "author": "mrzhao <zhaomengru2018@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "arweave-mnemonic-keys": "^0.0.9"
+    "arweave-mnemonic-keys": "^0.0.9",
+    "blockweave": "^1.0.17",
+    "dotenv": "^16.0.0",
+    "human-crypto-keys": "^0.1.4",
+    "lodash": "^4.17.21"
   }
 }
