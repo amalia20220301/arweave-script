@@ -1,0 +1,11 @@
+{
+  "name": "arweave-script",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:amalia20220301/arweave-script.git",
+  "author": "mrzhao <zhaomengru2018@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "arweave-mnemonic-keys": "^0.0.9"
+  }
+}
