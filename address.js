@@ -55,6 +55,9 @@ async function ownerToAddress(owner) {
 }
 
 async function generateAddress() {
+  /***
+   * 
+  */
   const key = await getKeyFromMnemonic(process.env.WORDS)
   console.log("🚀 ~ file: index.js ~ line 10 ~ generateAddress ~ key", key)
   return blockweave.wallets.jwkToAddress(key);

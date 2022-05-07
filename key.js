@@ -8,30 +8,61 @@ const HmacDrgb = require('hmac-drbg')
 const hash = require('hash.js');
 const pify = require('pify');
 const key = require('./key.kidney.json');
-(async function () {
+const crypto = require("libp2p-crypto");
+const { getKeyPairFromMnemonic, getKeyPairFromSeed } = require('human-crypto-keys');
+
+async function generateRSAKey() {
   const rsaKey = await subtle.generateKey({
     name: 'RSA-PSS',
     modulusLength,
     publicExponent,
     hash: { name: hashAlgorithm },
   }, true, ['sign', 'verify'])
-
   const jwk = await subtle.exportKey(
     'jwk',
     rsaKey.privateKey
   )
+}
+async function generateKeyPair() {
+  /**
+   * { modulusLength: 4096, publicExponent: 65537, method: 'PRIMEINC' }
+   * {modulusLength:e,publicExponent:t,
+   * publicKeyEncoding:{type:"spki",format:"pem"},
+   * privateKeyEncoding:{type:"pkcs8",format:"pem"}
+   *
+   * 底层最终调用的是node-forge的
+   * pki.rsa.generateKeyPair = function(bits, e, options, callback)
+   * bits: 4096
+   * e: 65537
+   * options:
+   */
+  let keyPair = await getKeyPairFromMnemonic(
+    process.env.WORDS,
+    { id: "rsa", modulusLength: 4096 },
+    { privateKeyFormat: "pkcs1-pem" }
+  );
+  console.log("🚀 ~ file: key.js ~ line 82 ~ keyPair", keyPair)
+  let importedKey = await crypto.keys.import(keyPair.privateKey, "");
+  console.log("🚀 ~ file: key.js ~ line 94 ~ importedKey", importedKey._key)
+}
 
-  const privateCryptoKey = await subtle.importKey(
-    'jwk',
-    jwk,
-    {
-      name: 'RSA-PSS',
-      hash: { name: 'SHA-256' },
-    },
-    false,
-    ['sign']
-  )
+async function generateKeyPairFromSeed() {
+  /**
+   * pem key pair
+  */
+  let keyPair = await getKeyPairFromSeed(
+    new Uint8Array(Buffer.from(process.env.SEED, 'hex')),
+    { id: "rsa", modulusLength: 4096 },
+    { privateKeyFormat: "pkcs1-pem" }
+  );
+  console.log("🚀 ~ file: key.js ~ line 82 ~ keyPair", keyPair)
+  let importedKey = await crypto.keys.import(keyPair.privateKey, "");
+  console.log("🚀 ~ file: key.js ~ line 94 ~ importedKey", importedKey._key)
+}
 
+generateKeyPair().then(console.log)
+
+async function test() {
   const createForgePrng = (seed) => {
     const hmacDrgb = new HmacDrgb({
       hash: hash.sha256,
@@ -48,9 +79,6 @@ const key = require('./key.kidney.json');
       },
     };
   };
-  const seed = Buffer.from(process.env.SEED, 'hex')
-  console.log("🚀 ~ file: key.js ~ line 51 ~ seed", seed)
-
   // const keypair = await pify(forge.pki.rsa.generateKeyPair)(modulusLength, publicExponent, {
   //   prng: createForgePrng(process.env.SEED)
   // })
@@ -71,7 +99,7 @@ const key = require('./key.kidney.json');
     };
   };
 
-  subtle.importKey(
+  const privateKey = await subtle.importKey(
     "jwk",
     {
       kty: key.kty,
@@ -84,16 +112,11 @@ const key = require('./key.kidney.json');
       name: "RSA-PSS",
       hash: { name: "SHA-256" }, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
     },
-    true, //whether the key is extractable (i.e. can be used in exportKey)
-    ["verify"] //"verify" for public key import, "sign" for private key imports
-  )
-    .then(function (privateKey) {
-      console.log(parseForgePrivateKey(privateKey));
-    })
-    .catch(function (err) {
-      console.error(err);
-    });
-
-
-})()
+    true,
+    ["sign"] //"verify" for public key import, "sign" for private key imports
+  ).catch(console.log)
+  console.log("🚀 ~ file: key.js ~ line 94 ~ privateKey", privateKey)
+  let importedKey = await crypto.keys.import(privateKey, "");
+  console.log("🚀 ~ file: key.js ~ line 94 ~ importedKey", importedKey)
+}
 
