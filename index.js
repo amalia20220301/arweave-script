@@ -7,6 +7,7 @@ const key = require('./key.json');
 
 async function generateAddress() {
   const key = await getKeyFromMnemonic(process.env.WORDS)
+  console.log("🚀 ~ file: index.js ~ line 10 ~ generateAddress ~ key", key)
   return blockweave.wallets.jwkToAddress(key);
 }
 
@@ -18,4 +19,4 @@ async function getBalance() {
   let ar = blockweave.ar.winstonToAr(winston);
   console.log('---ar-------'); console.log('ar', ar); console.log('-----ar-----');
 }
-getBalance().then(console.log)
+generateAddress().then(console.log)
