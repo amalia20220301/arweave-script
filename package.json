@@ -5,10 +5,11 @@
   "repository": "git@github.com:amalia20220301/arweave-script.git",
   "author": "mrzhao <zhaomengru2018@gmail.com>",
   "license": "MIT",
+  "type": "module",
   "dependencies": {
+    "arweave": "^1.10.23",
     "arweave-mnemonic-keys": "^0.0.9",
     "base64-js": "^1.5.1",
-    "blockweave": "^1.0.17",
     "crypto": "^1.0.1",
     "dotenv": "^16.0.0",
     "hash.js": "^1.1.7",

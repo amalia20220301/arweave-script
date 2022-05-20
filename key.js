@@ -1,31 +1,56 @@
-require('dotenv').config()
-const {subtle} = require('node:crypto').webcrypto;
+import 'dotenv/config'
+import {getKeyPairFromMnemonic} from 'human-crypto-keys';
+import Arweave from 'arweave';
+import constants from 'constants';
+import fs from 'fs';
+
 const publicExponent = new Uint8Array([0x01, 0x00, 0x01]);
 const hashAlgorithm = "SHA-256";
 const modulusLength = 4096;
-const forge = require('node-forge')
-const HmacDrgb = require('hmac-drbg')
-const hash = require('hash.js');
-const pify = require('pify');
-const key = require('./key.kidney.json');
-const crypto = require("libp2p-crypto");
-const {getKeyPairFromMnemonic} = require('human-crypto-keys');
-const B64js = require('base64-js')
+const keyFile = fs.readFileSync('./key.kidney.json');
+const key = JSON.parse(keyFile);
+const arweave = Arweave.init({
+    host: 'arweave.net',
+    port: 443,
+    protocol: 'https'
+});
 
 
-function b64UrlDecode(b64UrlString) {
-    b64UrlString = b64UrlString.replace(/\-/g, "+").replace(/\_/g, "/");
-    let padding;
-    b64UrlString.length % 4 == 0
-        ? (padding = 0)
-        : (padding = 4 - (b64UrlString.length % 4));
-    return b64UrlString.concat("=".repeat(padding));
+async function signTransaction() {
+    let transaction = await arweave.createTransaction({
+        target: '1seRanklLU_1VTGkEk7P0xAwMJfA7owA1JHW5KyZKlY',
+        quantity: arweave.ar.arToWinston('10.5')
+    }, key);
+    console.log('------transaction before sign---------')
+    console.log(transaction)
+    console.log('---------------')
+    await arweave.transactions.sign(transaction, key);
+    console.log('-----transaction after sign----------')
+    console.log(transaction)
+    console.log('---------------')
+    let result = await arweave.transactions.verify(transaction);
+    console.log('-------transaction verify--------')
+    console.log(result)
+    console.log('---------------')
+}
+signTransaction().then(console.log);
+
+async function signMessage() {
+    var data = fromHexString("ba279c839f2d27436b43f38eaea748c074c9883b93ff40673f8bf3377c7458e42e6f18c132047b4ebe99064b03d24175");
+    var signature = crypto
+        .createSign('sha256')
+        .update(data)
+        .sign({
+            key: Arweave.crypto.jwkToPem(key),
+            padding: constants.RSA_PKCS1_PSS_PADDING,
+            saltLength: undefined,
+        })
+    console.log('--------signMessage-------')
+    console.log(signature)
+    console.log(Buffer.from(signature).toString('hex'))
+    console.log('---------------')
 }
 
-
-function b64UrlToBuffer(b64UrlString) {
-    return new Uint8Array(B64js.toByteArray(b64UrlDecode(b64UrlString)));
-}
 
 async function generateRSAKey() {
     const rsaKey = await subtle.generateKey({
@@ -62,7 +87,7 @@ async function generateKeyPair() {
 
 }
 
-generateKeyPair().then(console.log)
+// generateKeyPair().then(console.log)
 
 async function test() {
     // const keypair = await pify(forge.pki.rsa.generateKeyPair)(modulusLength, publicExponent, {
